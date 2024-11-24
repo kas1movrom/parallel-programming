@@ -1,0 +1,1 @@
+This repository contains my parallel-programming labs. Fifth semester discipline.
