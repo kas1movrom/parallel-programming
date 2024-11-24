@@ -1,0 +1,15 @@
+model name	: Intel(R) Core(TM) i3-10110U CPU @ 2.10GHz
+cache size	: 4096 KB
+
+Distributor ID:	Ubuntu
+Description:	Ubuntu 24.04 LTS
+Release:	24.04
+Codename:	noble
+Mem:           7,5Gi       2,9Gi       2,8Gi       598Mi       2,7Gi       4,6Gi
+4
+gcc (Ubuntu 13.2.0-23ubuntu4) 13.2.0
+Copyright (C) 2023 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+OpenMp version: 5.2
