@@ -53,12 +53,12 @@ typedef struct Edge {
 Edge;
 
 typedef struct Vertex {
-
     int x;
     int y;
     enum VertexType type;
 
 	int count;
+    int capacity; // change
     Edge *edges;
 }
 Vertex;
@@ -110,6 +110,7 @@ void init_vertex(Graph *graph, int x, int y, enum VertexType type)
 
     graph->vertices[graph->size].type = type;
     graph->vertices[graph->size].edges = (Edge*) malloc(sizeof(Edge) * MAX_EDGES);
+    graph->vertices[graph->size].capacity = MAX_EDGES;
 }
 
 enum FuncResult add_vertex(Graph *graph, int x, int y, enum VertexType type)
@@ -163,6 +164,12 @@ enum Bool check_vertex_on_close(int x1, int y1, int x2, int y2)
 
 void edge_connection(Graph *graph, int index1, int index2, int weight) // change
 {
+    if (graph->vertices[index1].count == graph->vertices[index1].capacity)
+    {
+        graph->vertices[index1].capacity *= 2;
+        graph->vertices[index1].edges = (Edge *) realloc(graph->vertices[index1].edges, sizeof(Edge) * graph->vertices[index1].capacity);
+    }
+
     int count = ++graph->vertices[index1].count;
 
     graph->vertices[index1].edges[count - 1].from = index1;
@@ -172,8 +179,8 @@ void edge_connection(Graph *graph, int index1, int index2, int weight) // change
 
 enum FuncResult add_edge(Graph *graph, int x1, int y1, int x2, int y2, int weight) // change
 {
-    if (check_vertex_on_close(x1, y1, x2, y2) == FALSE)
-        return VERTICES_NOT_CLOSE;
+    // if (check_vertex_on_close(x1, y1, x2, y2) == FALSE)
+    //     return VERTICES_NOT_CLOSE;
 
     int index1, index2;
     if ((index1 = find_vertex(graph, x1, y1)) == -1 || (index2 = find_vertex(graph, x2, y2)) == -1)
@@ -190,8 +197,8 @@ enum FuncResult add_edge(Graph *graph, int x1, int y1, int x2, int y2, int weigh
 
 enum FuncResult change_weight(Graph *graph, int x1, int y1, int x2, int y2, int weight) // add function
 {
-    if (check_vertex_on_close(x1, y1, x2, y2) == FALSE)
-        return VERTICES_NOT_CLOSE;
+    // if (check_vertex_on_close(x1, y1, x2, y2) == FALSE)
+    //     return VERTICES_NOT_CLOSE;
 
     int index1, index2;
     if ((index1 = find_vertex(graph, x1, y1)) == -1 || (index2 = find_vertex(graph, x2, y2)) == -1)
@@ -225,14 +232,16 @@ enum FuncResult import_from_file(char* filename, Graph *graph) // change
 
         add_vertex(graph, array[0], array[1], array[2]);
 
-        add_edge(graph, array[0], array[1], array[0], array[1] - 1, 1);
-        add_edge(graph, array[0], array[1], array[0], array[1] + 1, 1);
-        add_edge(graph, array[0], array[1], array[0] - 1, array[1], 1);
-        add_edge(graph, array[0], array[1], array[0] + 1, array[1], 1);
-
         free(line);
         line = get_line(file);
     }
+    for (int i = 0; i < graph->size; ++i) {
+        for (int j = i + 1; j < graph->size; ++j) {
+            add_edge(graph, graph->vertices[j].x, graph->vertices[j].y, graph->vertices[i].x, graph->vertices[i].y, 1);
+            add_edge(graph, graph->vertices[i].x, graph->vertices[i].y, graph->vertices[j].x, graph->vertices[j].y, 1);
+        }
+    }
+
     return OKAY;
 }
 
@@ -282,6 +291,7 @@ void correct_vertices(Graph* graph, int index)
     graph->vertices[index].x = graph->vertices[index + 1].x;
     graph->vertices[index].y = graph->vertices[index + 1].y;
 
+    graph->vertices[index].capacity = graph->vertices[index + 1].capacity;
     graph->vertices[index].type = graph->vertices[index + 1].type;
     graph->vertices[index].count = graph->vertices[index + 1].count;
 }
@@ -321,8 +331,8 @@ enum FuncResult delete_vertex(Graph *graph, int x, int y)
 
 enum FuncResult delete_edge(Graph *graph, int x1, int y1, int x2, int y2)
 {
-    if (check_vertex_on_close(x1, y1, x2, y2) == FALSE)
-        return VERTICES_NOT_CLOSE;
+    // if (check_vertex_on_close(x1, y1, x2, y2) == FALSE)
+    //     return VERTICES_NOT_CLOSE;
 
     int index1, index2;
     if ((index1 = find_vertex(graph, x1, y1)) == -1 || (index2 = find_vertex(graph, x2, y2)) == -1)
@@ -633,12 +643,12 @@ int dialog_Bellman(Graph *graph) // change
     {
         print_vertex(graph->vertices[pred]);
         int prev_weight = array[pred].weight;
-        length += prev_weight;
-
+        
         pred = array[pred].pred;
         if (pred == -1)
             break;
 
+        length += prev_weight;
         printf("-{%d}", prev_weight);
         printf(" <-- ");
     }
