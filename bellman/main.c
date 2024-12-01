@@ -357,15 +357,19 @@ enum FuncResult change_type(Graph *graph, int x, int y, enum VertexType type)
     return OKAY;
 }
 
-Bellman *bellman_ford(Graph* graph, int x1, int y1, int x2, int y2, int* index) // change
+Bellman *bellman_ford(Graph* graph, int x1, int y1, int x2, int y2, int* index, double *time) // change
 {
     int index1, index2;
+    struct timespec start, end;
+
     if ((index1 = find_vertex(graph, x1, y1)) == -1 || (index2 = find_vertex(graph, x2, y2)) == -1 ||
             graph->vertices[index1].type != ENTER || graph->vertices[index2].type != EXIT)
         return NULL;
 
     *index = index2;
     Bellman *array = (Bellman *) malloc(sizeof(Bellman) * graph->size);
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int i = 0; i < graph->size; ++i) {
         array[i].distance = INT_MAX / 2 - 1;
         array[i].pred = -1;
@@ -395,6 +399,9 @@ Bellman *bellman_ford(Graph* graph, int x1, int y1, int x2, int y2, int* index) 
             }
         }
     }
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    *time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+
     return array;
 }
 
@@ -630,7 +637,8 @@ int dialog_Bellman(Graph *graph) // change
         return eof;
 
     int index = 0;
-    Bellman *array = bellman_ford(graph, x1, y1, x2, y2, &index);
+    double time = 0.0;
+    Bellman *array = bellman_ford(graph, x1, y1, x2, y2, &index, &time);
     if (array == NULL)
     {
         printf("%s", graph_msgs[4]);
@@ -643,7 +651,7 @@ int dialog_Bellman(Graph *graph) // change
     {
         print_vertex(graph->vertices[pred]);
         int prev_weight = array[pred].weight;
-        
+
         pred = array[pred].pred;
         if (pred == -1)
             break;
@@ -653,6 +661,7 @@ int dialog_Bellman(Graph *graph) // change
         printf(" <-- ");
     }
     printf("\nlength : %d\n", length);
+    printf("time : %f\n", time);
     free(array);
     return 1;
 }
