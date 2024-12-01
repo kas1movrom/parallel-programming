@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <readline/readline.h>
 #include <time.h>
+#include <omp.h>
 
 #define eof -1
 #define START_CAPACITY 50
@@ -370,35 +371,54 @@ Bellman *bellman_ford(Graph* graph, int x1, int y1, int x2, int y2, int* index, 
     Bellman *array = (Bellman *) malloc(sizeof(Bellman) * graph->size);
 
     clock_gettime(CLOCK_MONOTONIC, &start);
-    for (int i = 0; i < graph->size; ++i) {
-        array[i].distance = INT_MAX / 2 - 1;
-        array[i].pred = -1;
-    }
-    array[index1].distance = 0;
 
-    for (int i = 1; i <= graph->size; ++i) {
-        for (int j = 0; j < graph->size; ++j) {
-            for (int k = 0; k < graph->vertices[j].count; ++k) {
-                if (array[graph->vertices[j].edges[k].to].distance > array[j].distance + graph->vertices[j].edges[k].weight) {
-                    array[graph->vertices[j].edges[k].to].distance = array[j].distance + graph->vertices[j].edges[k].weight;
-                    array[graph->vertices[j].edges[k].to].pred = j;
-                    array[graph->vertices[j].edges[k].to].weight = graph->vertices[j].edges[k].weight;
+    ///double start = omp_get_wtime();
+    ///int threads = 4;
+    ///#pragma omp parallel num_threads(threads) shared(graph, array, threads) default(none)
+    {
+        ///#pragma omp for 
+        for (int i = 0; i < graph->size; ++i) {
+            array[i].distance = INT_MAX / 2 - 1;
+            array[i].pred = -1;
+        }
+        array[index1].distance = 0;
+
+        for (int i = 1; i <= graph->size; ++i) {
+            for (int j = 0; j < graph->size; ++j) {
+                ///#pragma omp for
+                for (int k = 0; k < graph->vertices[j].count; ++k) {
+                    if (array[graph->vertices[j].edges[k].to].distance > array[j].distance + graph->vertices[j].edges[k].weight) {
+                        array[graph->vertices[j].edges[k].to].distance = array[j].distance + graph->vertices[j].edges[k].weight;
+                        array[graph->vertices[j].edges[k].to].pred = j;
+                        array[graph->vertices[j].edges[k].to].weight = graph->vertices[j].edges[k].weight;
+                    }
+                }
+            }
+        }
+        if (array[index2].pred == -1) {
+            ///double end = omp_get_wtime();
+            ///*time = (end - start);
+            clock_gettime(CLOCK_MONOTONIC, &end);
+            *time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+            free(array);
+            return NULL;
+        }
+        
+        for (int i = 0; i < graph->size; ++i) {
+            ///#pragma omp for
+            for (int j  = 0; j < graph->vertices[i].count; ++j) {
+                if (array[graph->vertices[i].edges[j].to].distance > array[i].distance + graph->vertices[i].edges[j].weight) {
+                    ///double end = omp_get_wtime();
+                    ///*time = (end - start);
+                    clock_gettime(CLOCK_MONOTONIC, &end);
+                    *time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+                    return NULL;
                 }
             }
         }
     }
-    if (array[index2].pred == -1) {
-        free(array);
-        return NULL;
-    }
-    
-    for (int i = 0; i < graph->size; ++i) {
-        for (int j  = 0; j < graph->vertices[i].count; ++j) {
-            if (array[graph->vertices[i].edges[j].to].distance > array[i].distance + graph->vertices[i].edges[j].weight) {
-                return NULL;
-            }
-        }
-    }
+    ///double end = omp_get_wtime();
+    ///*time = (end - start);
     clock_gettime(CLOCK_MONOTONIC, &end);
     *time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
