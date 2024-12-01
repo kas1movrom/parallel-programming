@@ -45,10 +45,10 @@ int main() {
 
 	for (int i = 1; i <= 4; i++) {
 		int random_seed = 920215;
-		for (int j = 0; j < 10; j++) {
+		for (int j = 0; j < 50; j++) {
 			control_method(i, random_seed + j);	
 		}
-		avg_sum /= 10.0;
+		avg_sum /= 50.0;
 		printf("--------------------------------\nAVERAGE_SUM: %f\n", avg_sum);
 		avg_sum = 0.0;
 	}
